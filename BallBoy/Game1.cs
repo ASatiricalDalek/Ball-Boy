@@ -12,6 +12,11 @@ namespace BallBoy
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
+        Texture2D ball; // The Ball texture itself
+        Vector2 ballPosition;
+        float ballSpeed;
+
+
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -26,7 +31,8 @@ namespace BallBoy
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            ballPosition = new Vector2(graphics.PreferredBackBufferWidth / 2, graphics.PreferredBackBufferHeight / 2); // Init ball to center of screen
+            ballSpeed = 600;
 
             base.Initialize();
         }
@@ -41,6 +47,7 @@ namespace BallBoy
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
+            ball = Content.Load<Texture2D>("ball");
         }
 
         /// <summary>
@@ -62,7 +69,32 @@ namespace BallBoy
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+            var kstate = Keyboard.GetState();
+
+            if (kstate.IsKeyDown(Keys.Up) || kstate.IsKeyDown(Keys.W))
+            {
+                // Update time is not fixed, so to get smooth movement we multiply the speed by the time since last update call
+                ballPosition.Y -= ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            if (kstate.IsKeyDown(Keys.Down) || kstate.IsKeyDown(Keys.S))
+            {
+                ballPosition.Y += ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            if (kstate.IsKeyDown(Keys.Left) || kstate.IsKeyDown(Keys.A))
+            {
+                ballPosition.X -= ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            if (kstate.IsKeyDown(Keys.Right) || kstate.IsKeyDown(Keys.D))
+            {
+                ballPosition.X += ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            // Keep ball within window bounds
+            ballPosition.X = MathHelper.Min(MathHelper.Max(ball.Width / 2, ballPosition.X), graphics.PreferredBackBufferWidth - ball.Width / 2);
+            ballPosition.Y = MathHelper.Min(MathHelper.Max(ball.Height / 2, ballPosition.Y), graphics.PreferredBackBufferHeight - ball.Height / 2);
 
             base.Update(gameTime);
         }
@@ -75,9 +107,23 @@ namespace BallBoy
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            spriteBatch.Begin();
+            spriteBatch.Draw // Draw ball at the var ball position
+            (
+                ball, // Texture in use 
+                ballPosition, // Position
+                null, // This, too, is important (???) 
+                Color.White,
+                0f,
+                new Vector2(ball.Width / 2, ball.Height /2), // Set the origin to the center of the ball, not the top left corner
+                Vector2.One,
+                SpriteEffects.None,
+                0f
+            ); 
+            spriteBatch.End();
 
             base.Draw(gameTime);
         }
+
     }
 }
